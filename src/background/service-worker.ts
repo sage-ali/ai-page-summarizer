@@ -52,6 +52,7 @@ async function handleSummaryRequest(
       bullets: output.bullets,
       keyInsights: output.keyInsights,
       readingTimeMinutes: Math.max(1, Math.ceil(wordCount / 238)),
+      wordCount,
       generatedAt: Date.now(),
     };
 

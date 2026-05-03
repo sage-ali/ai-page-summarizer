@@ -11,6 +11,7 @@ describe('PageSummary', () => {
       bullets: [bullet],
       keyInsights: ['Key takeaway'],
       readingTimeMinutes: 3,
+      wordCount: 750,
       generatedAt: 1000000,
     };
 
