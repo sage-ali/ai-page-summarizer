@@ -7,7 +7,11 @@ const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemi
 
 // Message listener
 
-chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse): boolean => {
+chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse): boolean => {
+  if (sender.id !== chrome.runtime.id) {
+    return false;
+  }
+
   if (!isExtensionMessage(message) || message.type !== 'REQUEST_SUMMARY') {
     return false;
   }
