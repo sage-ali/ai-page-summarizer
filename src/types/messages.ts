@@ -5,7 +5,9 @@ import type { PageSummary } from '@/types/summary';
 export interface RequestSummaryMessage {
   type: 'REQUEST_SUMMARY';
   url: string;
+  title: string;
   content: string;
+  wordCount: number;
 }
 
 // Inbound — service worker sends these back to the popup
