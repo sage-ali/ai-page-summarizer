@@ -7,7 +7,11 @@ const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemi
 
 // Message listener
 
-chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse): boolean => {
+chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse): boolean => {
+  if (sender.id !== chrome.runtime.id) {
+    return false;
+  }
+
   if (!isExtensionMessage(message) || message.type !== 'REQUEST_SUMMARY') {
     return false;
   }
@@ -92,7 +96,7 @@ async function callGeminiOnce(content: string): Promise<AISummaryOutput> {
   });
 
   if (!res.ok) {
-    throw new Error(`Gemini API error ${res.status}: ${res.statusText}`);
+    throw new Error(geminiHttpError(res.status));
   }
 
   const data: unknown = await res.json();
@@ -117,6 +121,14 @@ async function callGeminiOnce(content: string): Promise<AISummaryOutput> {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function geminiHttpError(status: number): string {
+  if (status === 401 || status === 403)
+    return 'API key is invalid or unauthorized. Check your .env file.';
+  if (status === 429) return 'Too many requests. Please wait a moment and try again.';
+  if (status >= 500) return 'Gemini API is temporarily unavailable. Please try again later.';
+  return `Failed to reach Gemini API (status ${status.toString()}). Please try again.`;
 }
 
 function buildPrompt(content: string): string {
