@@ -8,23 +8,31 @@ function storageKey(url: string): string {
 }
 
 export async function getCachedSummary(url: string): Promise<PageSummary | null> {
-  const key = storageKey(url);
-  const result: Record<string, unknown> = await chrome.storage.local.get(key);
-  const raw: unknown = result[key];
+  try {
+    const key = storageKey(url);
+    const result: Record<string, unknown> = await chrome.storage.local.get(key);
+    const raw: unknown = result[key];
 
-  if (!isPageSummary(raw)) return null;
+    if (!isPageSummary(raw)) return null;
 
-  const ageMs = Date.now() - raw.generatedAt;
-  if (ageMs > MAX_CACHE_AGE_MS) {
-    void chrome.storage.local.remove(key);
+    const ageMs = Date.now() - raw.generatedAt;
+    if (ageMs > MAX_CACHE_AGE_MS) {
+      void chrome.storage.local.remove(key);
+      return null;
+    }
+
+    return raw;
+  } catch {
     return null;
   }
-
-  return raw;
 }
 
 export async function cacheSummary(url: string, summary: PageSummary): Promise<void> {
-  await chrome.storage.local.set({ [storageKey(url)]: summary });
+  try {
+    await chrome.storage.local.set({ [storageKey(url)]: summary });
+  } catch {
+    // Non-critical — a cache write failure should not interrupt the user
+  }
 }
 
 // Type guard — validates the full PageSummary shape read back from storage

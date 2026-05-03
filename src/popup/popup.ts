@@ -115,7 +115,7 @@ async function summarizePage(): Promise<void> {
       showError(result.error);
     } else {
       currentSummary = result.summary;
-      await cacheSummary(currentTabUrl, result.summary);
+      void cacheSummary(currentTabUrl, result.summary);
       renderSummary(result.summary);
     }
   } catch (err: unknown) {
