@@ -35,4 +35,17 @@ describe('ExtensionMessage discriminated union', () => {
       expect(msg.error).toBe('Network failure');
     }
   });
+
+  it('EXTRACTED_CONTENT message carries wordCount', () => {
+    const msg: ExtensionMessage = {
+      type: 'EXTRACTED_CONTENT',
+      content: 'Some page text',
+      title: 'Test Page',
+      wordCount: 3,
+    };
+    expect(msg.type).toBe('EXTRACTED_CONTENT');
+    if (msg.type === 'EXTRACTED_CONTENT') {
+      expect(msg.wordCount).toBe(3);
+    }
+  });
 });

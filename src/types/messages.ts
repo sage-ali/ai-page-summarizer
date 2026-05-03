@@ -32,6 +32,7 @@ export interface ExtractedContentMessage {
   type: 'EXTRACTED_CONTENT';
   content: string;
   title: string;
+  wordCount: number;
 }
 
 // Union — every message in the extension must be one of these
