@@ -8,6 +8,7 @@ import type {
 } from '@/types/messages';
 import type { PageSummary } from '@/types/summary';
 import { setTextContent, createTextElement, clearElement } from '@/utils/sanitizer';
+import { getCachedSummary, cacheSummary } from '@/utils/storage';
 
 // ---------------------------------------------------------------------------
 // Element helper — throws at startup if markup is missing, so all later
@@ -100,6 +101,13 @@ async function summarizePage(): Promise<void> {
   showView('view-loading');
 
   try {
+    const cached = await getCachedSummary(currentTabUrl);
+    if (cached !== null) {
+      currentSummary = cached;
+      renderSummary(cached);
+      return;
+    }
+
     const extracted = await extractFromTab(currentTabId);
     const result = await requestSummary(extracted, currentTabUrl);
 
@@ -107,6 +115,7 @@ async function summarizePage(): Promise<void> {
       showError(result.error);
     } else {
       currentSummary = result.summary;
+      await cacheSummary(currentTabUrl, result.summary);
       renderSummary(result.summary);
     }
   } catch (err: unknown) {
