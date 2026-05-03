@@ -7,7 +7,45 @@
     <link rel="stylesheet" href="./popup.css" />
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <!-- View: idle — user hasn't triggered a summary yet -->
+      <div id="view-idle">
+        <div class="popup-header">
+          <span class="popup-title">AI Page Summarizer</span>
+        </div>
+        <p id="page-title" class="page-title">Loading page info…</p>
+        <button id="btn-summarize" class="btn btn-primary">Summarize this page</button>
+      </div>
+
+      <!-- View: loading — waiting for extraction and AI response -->
+      <div id="view-loading" hidden>
+        <div class="spinner" role="status" aria-label="Generating summary"></div>
+        <p class="loading-text">Generating summary…</p>
+      </div>
+
+      <!-- View: result — summary ready -->
+      <div id="view-result" hidden>
+        <div class="result-header">
+          <h1 id="result-title" class="result-title"></h1>
+          <span id="reading-time" class="reading-time"></span>
+        </div>
+        <ul id="bullets-list" aria-label="Page summary"></ul>
+        <section class="insights-section">
+          <h2 class="insights-heading">Key insights</h2>
+          <ul id="insights-list"></ul>
+        </section>
+        <div class="actions">
+          <button id="btn-copy" class="btn btn-secondary">Copy summary</button>
+          <button id="btn-reset" class="btn btn-secondary">New summary</button>
+        </div>
+      </div>
+
+      <!-- View: error — something went wrong -->
+      <div id="view-error" hidden>
+        <p id="error-message" class="error-message" role="alert"></p>
+        <button id="btn-retry" class="btn btn-primary">Try again</button>
+      </div>
+    </div>
     <script type="module" src="./popup.ts"></script>
   </body>
 </html>
