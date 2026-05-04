@@ -1,6 +1,6 @@
 # AI Page Summarizer — Chrome Extension
 
-A Manifest V3 Chrome extension that extracts the main content from any webpage and uses the Gemini 1.5 Flash API to generate a structured, readable summary — complete with bullet points, key insights, estimated reading time, and word count.
+A Manifest V3 Chrome extension that extracts the main content from any webpage and uses the Gemini 2.5 Flash API to generate a structured, readable summary — complete with bullet points, key insights, estimated reading time, and word count.
 
 ---
 
@@ -186,8 +186,8 @@ Popup                     Content Script             Service Worker
 
 ## AI Integration
 
-**Provider:** Google Gemini 1.5 Flash  
-**Endpoint:** `generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`
+**Provider:** Google Gemini 2.5 Flash
+**Endpoint:** `generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`
 
 The service worker sends the extracted page text to Gemini with a structured prompt that requests a specific JSON shape:
 
@@ -221,19 +221,19 @@ The response is validated with a runtime type guard before being used — the ex
 
 ## Trade-offs
 
-**Gemini 1.5 Flash vs a larger model**  
-Flash is fast (under 3 seconds on most pages) and free within generous rate limits. A larger model like Gemini 1.5 Pro would produce better summaries on complex technical content but at higher latency and cost. Flash is the right default for a general-purpose summariser.
+**Gemini 2.5 Flash vs a larger model**
+Flash is fast (under 3 seconds on most pages) and free within generous rate limits. A larger model like Gemini 2.5 Pro would produce better summaries on complex technical content but at higher latency and cost. Flash is the right default for a general-purpose summariser.
 
-**Client-side extraction vs server-side**  
+**Client-side extraction vs server-side**
 All content extraction runs in the content script — no page content ever leaves the browser except for what is sent to Gemini. This improves privacy and removes the need for a proxy server, at the cost of being unable to summarise pages that block or throttle JavaScript.
 
-**Build-time API key vs runtime fetch from a proxy**  
+**Build-time API key vs runtime fetch from a proxy**
 Embedding the key at build time is simpler and works without a backend, but it means each user needs their own key. A production version would proxy requests through a server so the key is never in the extension bundle at all.
 
-**Readability + fallback extraction**  
+**Readability + fallback extraction**
 Mozilla's Readability library (which powers Firefox Reader Mode) handles most articles cleanly. For pages it cannot parse, the extension falls back to `document.body.textContent`. This means pages with minimal semantic HTML (dashboards, SPAs, login pages) will produce lower-quality summaries rather than hard failures.
 
-**5-day cache TTL**  
+**5-day cache TTL**
 Long enough to avoid redundant API calls for frequently visited pages, short enough that summaries for news articles stay reasonably current. This is configurable in `storage.ts`.
 
 ---

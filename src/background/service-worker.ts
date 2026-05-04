@@ -3,7 +3,7 @@ import type { GeminiRequest, GeminiResponse, AISummaryOutput } from '@/types/api
 import type { PageSummary } from '@/types/summary';
 
 const GEMINI_API_KEY: string = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 // Message listener
 
@@ -97,7 +97,8 @@ async function callGeminiOnce(content: string): Promise<AISummaryOutput> {
   });
 
   if (!res.ok) {
-    throw new Error(geminiHttpError(res.status));
+    const body = await res.text().catch(() => '');
+    throw new Error(geminiHttpError(res.status, body));
   }
 
   const data: unknown = await res.json();
@@ -124,12 +125,12 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function geminiHttpError(status: number): string {
+function geminiHttpError(status: number, body: string): string {
   if (status === 401 || status === 403)
     return 'API key is invalid or unauthorized. Check your .env file.';
   if (status === 429) return 'Too many requests. Please wait a moment and try again.';
   if (status >= 500) return 'Gemini API is temporarily unavailable. Please try again later.';
-  return `Failed to reach Gemini API (status ${status.toString()}). Please try again.`;
+  return `Gemini API error ${status.toString()}: ${body.slice(0, 200)}`;
 }
 
 function buildPrompt(content: string): string {
