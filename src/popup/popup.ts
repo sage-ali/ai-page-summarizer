@@ -34,6 +34,41 @@ function showView(active: ViewId): void {
   }
 }
 
+function setLoadingText(text: string): void {
+  setTextContent(getElement('loading-text'), text);
+}
+
+// ---------------------------------------------------------------------------
+// Theme
+// ---------------------------------------------------------------------------
+
+type Theme = 'light' | 'dark';
+
+function applyTheme(theme: Theme): void {
+  document.documentElement.dataset['theme'] = theme === 'dark' ? 'dark' : '';
+  setTextContent(getElement('btn-theme'), theme === 'dark' ? '◐' : '◑');
+}
+
+async function loadTheme(): Promise<void> {
+  try {
+    const result: Record<string, unknown> = await chrome.storage.local.get('theme');
+    const stored = result['theme'];
+    applyTheme(stored === 'dark' ? 'dark' : 'light');
+  } catch {
+    applyTheme('light');
+  }
+}
+
+async function toggleTheme(): Promise<void> {
+  const next: Theme = document.documentElement.dataset['theme'] === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  try {
+    await chrome.storage.local.set({ theme: next });
+  } catch {
+    // Theme preference not persisted — not critical
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Module-level state (reset on each summarise call)
 // ---------------------------------------------------------------------------
@@ -67,10 +102,16 @@ document.addEventListener('DOMContentLoaded', (): void => {
       void copyToClipboard(currentSummary);
     }
   });
+
+  getElement('btn-theme').addEventListener('click', (): void => {
+    void toggleTheme();
+  });
 });
 
 async function init(): Promise<void> {
   try {
+    await loadTheme();
+
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
     if (tab === undefined || tab.id === undefined) {
@@ -98,17 +139,21 @@ async function summarizePage(): Promise<void> {
     return;
   }
 
+  setLoadingText('Extracting content…');
   showView('view-loading');
 
   try {
     const cached = await getCachedSummary(currentTabUrl);
     if (cached !== null) {
       currentSummary = cached;
-      renderSummary(cached);
+      renderSummary(cached, true);
       return;
     }
 
     const extracted = await extractFromTab(currentTabId);
+
+    setLoadingText('Generating AI summary…');
+
     const result = await requestSummary(extracted, currentTabUrl);
 
     if (result.type === 'SUMMARY_ERROR') {
@@ -116,7 +161,7 @@ async function summarizePage(): Promise<void> {
     } else {
       currentSummary = result.summary;
       void cacheSummary(currentTabUrl, result.summary);
-      renderSummary(result.summary);
+      renderSummary(result.summary, false);
     }
   } catch (err: unknown) {
     showError(err instanceof Error ? err.message : 'Something went wrong.');
@@ -164,9 +209,18 @@ async function requestSummary(
 // Rendering
 // ---------------------------------------------------------------------------
 
-function renderSummary(summary: PageSummary): void {
+function renderSummary(summary: PageSummary, fromCache: boolean): void {
   setTextContent(getElement('result-title'), summary.title);
   setTextContent(getElement('reading-time'), `~${summary.readingTimeMinutes} min read`);
+  setTextContent(getElement('word-count'), `${summary.wordCount.toLocaleString()} words`);
+
+  const cacheBadge = getElement('cache-badge');
+  if (fromCache) {
+    setTextContent(cacheBadge, `Cached · ${formatAge(summary.generatedAt)}`);
+    cacheBadge.hidden = false;
+  } else {
+    cacheBadge.hidden = true;
+  }
 
   const bulletsList = getElement('bullets-list');
   clearElement(bulletsList);
@@ -183,6 +237,15 @@ function renderSummary(summary: PageSummary): void {
   }
 
   showView('view-result');
+}
+
+function formatAge(generatedAt: number): string {
+  const minutes = Math.floor((Date.now() - generatedAt) / 60_000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
 }
 
 function showError(message: string): void {
@@ -203,7 +266,7 @@ async function copyToClipboard(summary: PageSummary): Promise<void> {
     'Key insights:',
     ...summary.keyInsights.map((i) => `• ${i}`),
     '',
-    `Reading time: ~${summary.readingTimeMinutes} min`,
+    `Reading time: ~${summary.readingTimeMinutes} min · ${summary.wordCount.toLocaleString()} words`,
   ];
 
   const btn = getElement('btn-copy');

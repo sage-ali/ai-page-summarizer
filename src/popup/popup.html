@@ -12,6 +12,14 @@
       <div id="view-idle">
         <div class="popup-header">
           <span class="popup-title">AI Page Summarizer</span>
+          <button
+            id="btn-theme"
+            class="btn-icon"
+            title="Toggle dark mode"
+            aria-label="Toggle dark mode"
+          >
+            ◑
+          </button>
         </div>
         <p id="page-title" class="page-title">Loading page info…</p>
         <button id="btn-summarize" class="btn btn-primary">Summarize this page</button>
@@ -20,14 +28,18 @@
       <!-- View: loading — waiting for extraction and AI response -->
       <div id="view-loading" hidden>
         <div class="spinner" role="status" aria-label="Generating summary"></div>
-        <p class="loading-text">Generating summary…</p>
+        <p id="loading-text" class="loading-text">Extracting content…</p>
       </div>
 
       <!-- View: result — summary ready -->
       <div id="view-result" hidden>
         <div class="result-header">
           <h1 id="result-title" class="result-title"></h1>
-          <span id="reading-time" class="reading-time"></span>
+          <div class="result-meta">
+            <span id="reading-time" class="reading-time"></span>
+            <span id="word-count" class="word-count"></span>
+            <span id="cache-badge" class="cache-badge" hidden>Cached</span>
+          </div>
         </div>
         <ul id="bullets-list" aria-label="Page summary"></ul>
         <section class="insights-section">
