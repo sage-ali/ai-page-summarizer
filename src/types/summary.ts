@@ -9,5 +9,6 @@ export interface PageSummary {
   bullets: BulletPoint[];
   keyInsights: string[];
   readingTimeMinutes: number;
+  wordCount: number;
   generatedAt: number;
 }

@@ -46,6 +46,7 @@ function isPageSummary(value: unknown): value is PageSummary {
     !('bullets' in value) ||
     !('keyInsights' in value) ||
     !('readingTimeMinutes' in value) ||
+    !('wordCount' in value) ||
     !('generatedAt' in value)
   ) {
     return false;
@@ -55,6 +56,7 @@ function isPageSummary(value: unknown): value is PageSummary {
     typeof value.title === 'string' &&
     typeof value.url === 'string' &&
     typeof value.readingTimeMinutes === 'number' &&
+    typeof value.wordCount === 'number' &&
     typeof value.generatedAt === 'number' &&
     Array.isArray(value.bullets) &&
     value.bullets.every(isBulletPoint) &&
